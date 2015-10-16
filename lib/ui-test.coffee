@@ -8,6 +8,13 @@ module.exports = UiTest =
   modalPanel: null
   subscriptions: null
   listener: null
+  classDotCpp:null
+  classDotH:null
+  bracket:null
+  # parameters
+  virtualDestructor: 'yes'
+  copyConstructor: 'yes'
+  assignmentOperator: 'yes' # lame that it doesnt take a bool
 
   activate: (state) ->
     #@uiTestView = new UiTestView(state.uiTestViewState)
@@ -22,9 +29,30 @@ module.exports = UiTest =
     @subscriptions.add atom.commands.add 'atom-workspace', 'ui-test:toggle': => @toggle()
 
     @listener.add '.ui-test-button', 'click', (event) =>
-      alert(@uiTestView.getText())
+      @createClass(@uiTestView.getText())
 
     @listener.add '.ui-test-input', 'keypress', (event) => @validateInput event, true
+
+  createClass: (cls) =>
+
+    unless @classDotCpp?
+      path = require('path')
+      @bracket = require('bracket-templates')
+      cdcpp = path.join(__dirname, "../etc/classDotCPP.txt")
+      cdh = path.join(__dirname,"../etc/classDotH.txt")
+
+      @classDotCpp = fs.readFileSync(cdcpp)
+      @classDotH = fs.readFileSync(cdh)
+
+    data =
+      name: cls
+      virtualDestructor: @virtualDestructor
+      copyConstructor: @copyConstructor
+      assignmentOperator: @assignmentOperator
+
+    console.log data
+    alert( @bracket.render(String(@classDotH), data ) )
+    alert( @bracket.render(String(@classDotCpp), data ) )
 
   validateInput: (evt) =>
     evt = evt or window.event5
